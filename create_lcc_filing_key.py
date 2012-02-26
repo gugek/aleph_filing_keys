@@ -7,7 +7,7 @@ import string
 from optparse import OptionParser
 
 
-def create_lcc_filing_key(s, quiet=False):
+def create_lcc_filing_key(s, quiet=True):
     """Create a filing key for an lcc string
 
     >>> create_lcc_filing_key('KF1245.A45 J32 2011')
