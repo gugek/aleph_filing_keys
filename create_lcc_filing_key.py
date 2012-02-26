@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 import sys
 import re
 import string
@@ -23,7 +23,7 @@ def create_lcc_filing_key(s, quiet=False):
     >>> create_lcc_filing_key('KJC2100.2006 C9 2012')
     'kjc#2100 2006 c9 2012'
     >>> create_lcc_filing_key('JN23.42.S42 B43 1990c')
-    'jn!23 42 s42 b4300000 1990c'
+    'jn!23 42 s42 b43 1990c'
     >>> create_lcc_filing_key('382.532 T32 1999', quiet=False)
     Traceback (most recent call last):
         ...
