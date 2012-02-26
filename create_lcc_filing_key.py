@@ -11,19 +11,19 @@ def create_lcc_filing_key(s, quiet=False):
     """Create a filing key for an lcc string
 
     >>> create_lcc_filing_key('KF1245.A45 J32 2011')
-    'kf#1245 a4500000 j3200000 20110000'
+    'kf#1245 a45 j32 2011'
     >>> create_lcc_filing_key('Q4235.R4 N3256 2001a')
-    'q#4235 r4000000 n3256000 2001a000'
+    'q#4235 r4 n3256 2001a'
     >>> create_lcc_filing_key('KF924.B32 1973')
-    'kf"924 b3200000 19730000'
+    'kf"924 b32 1973'
     >>> create_lcc_filing_key('HV23.C32 1953z')
-    'hv!23 c3200000 1953z000'
+    'hv!23 c32 1953z'
     >>> create_lcc_filing_key('Z1.A9 T32')
-    'z 1 a9000000 t3200000'
+    'z 1 a9 t32'
     >>> create_lcc_filing_key('KJC2100.2006 C9 2012')
-    'kjc#2100 20060000 c9000000 20120000'
+    'kjc#2100 2006 c9 2012'
     >>> create_lcc_filing_key('JN23.42.S42 B43 1990c')
-    'jn!23 42000000 s4200000 b4300000 1990c000'
+    'jn!23 42 s42 b4300000 1990c'
     >>> create_lcc_filing_key('382.532 T32 1999', quiet=False)
     Traceback (most recent call last):
         ...
@@ -45,10 +45,6 @@ def create_lcc_filing_key(s, quiet=False):
     lcc_match = lcc_re.match(s)
     if lcc_match:
         (alpha, number, rest) = lcc_match.groups()
-        elements = rest.split(" ")
-        rest =  ""
-        for element in elements:
-            if element: rest += " %s" % element.ljust(8, '0')
         if len(number) == 1:
             s = '%s %s%s' % (alpha, number, rest)
         elif len(number) == 2:
