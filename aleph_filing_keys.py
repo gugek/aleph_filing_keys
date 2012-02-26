@@ -1,0 +1,115 @@
+#!/usr/bin/python
+
+import lxml.etree as ET
+import sys
+import re
+import string
+from optparse import OptionParser
+
+
+def create_lcc_filing_key(s, quiet=False):
+    """Create a filing key for an lcc string
+
+    >>> create_lcc_filing_key('KF1245.A45 J32 2011')
+    'kf#1245 a4500000 j3200000 20110000'
+    >>> create_lcc_filing_key('Q4235.R4 N3256 2001a')
+    'q#4235 r4000000 n3256000 2001a000'
+    >>> create_lcc_filing_key('KF924.B32 1973')
+    'kf"924 b3200000 19730000'
+    >>> create_lcc_filing_key('HV23.C32 1953z')
+    'hv!23 c3200000 1953z000'
+    >>> create_lcc_filing_key('Z1.A9 T32')
+    'z 1 a9000000 t3200000'
+    >>> create_lcc_filing_key('KJC2100.2006 C9 2012')
+    'kjc#2100 20060000 c9000000 20120000'
+    >>> create_lcc_filing_key('JN23.42.S42 B43 1990c')
+    'jn!23 42000000 s4200000 b4300000 1990c000'
+    >>> create_lcc_filing_key('382.532 T32 1999', quiet=False)
+    Traceback (most recent call last):
+        ...
+    ValueError: Not a valid Library of Congress Call Number!
+    >>> create_lcc_filing_key('GN923456.A43 T32', quiet=False)
+    Traceback (most recent call last):
+        ...
+    ValueError: Not a valid Library of Congress Call Number!
+    """
+
+    blanks = string.ljust('', len(string.punctuation), ' ')
+    table = string.maketrans(string.punctuation, blanks)
+    lcc_re = re.compile('^([a-z]+)(\d+)(.*)')
+    rest_re = re.compile('^(\s?\d+)(.*)')
+    s = s.translate(table)
+    s = re.sub('\s+', ' ', s)
+    s = s.lower()
+    s = s.strip()
+    lcc_match = lcc_re.match(s)
+    if lcc_match:
+        (alpha, number, rest) = lcc_match.groups()
+        elements = rest.split(" ")
+        rest =  ""
+        for element in elements:
+            if element: rest += " %s" % element.ljust(8, '0')
+        if len(number) == 1:
+            s = '%s %s%s' % (alpha, number, rest)
+        elif len(number) == 2:
+            s = '%s!%s%s' % (alpha, number, rest)
+        elif len(number) == 3:
+            s = '%s"%s%s' % (alpha, number, rest)
+        elif len(number) == 4:
+            s = '%s#%s%s' % (alpha, number, rest)
+        elif quiet == True:
+            s = '%s#%s%s' % (alpha, number, rest)
+        else:
+            raise ValueError('Not a valid Library of Congress Call Number!')
+    elif quiet == True:
+        pass
+    else:
+        raise ValueError('Not a valid Library of Congress Call Number!')
+    return s
+
+def main():
+    """Open a ALEPH item output file and filter it based on a range of LC call
+    numbers"""
+    optionparser = OptionParser()
+    optionparser.add_option('-f', '--file', dest='infile',
+            help="file to read")
+    optionparser.add_option('-o', '--output', dest='outfile',
+            help="file to output")
+    optionparser.add_option('-l', '--lower', dest='lbound',
+            help="lower call number bound")
+    optionparser.add_option('-u', '--upper', dest='ubound',
+            help="upper call number bound")
+    optionparser.add_option('-c', '--counter', type="int", dest='counter',
+            help="progress counter")
+    optionparser.set_defaults(counter=100)
+    (options, args) = optionparser.parse_args()
+    if not options.infile or not options.outfile or not options.lbound or \
+            not options.ubound:
+            print "Need to fill in all the options!"
+            sys.exit()
+    infile = open(options.infile, 'rb')
+    outfile = open(options.outfile, 'w')
+    parser = ET.iterparse(infile)
+
+    begin = create_lcc_filing_key(options.lbound, quiet=False)
+    end = create_lcc_filing_key(options.ubound, quiet=False)
+    i = 0
+    j = 0
+    for (event, elem) in parser:
+        if elem.tag == 'section-02':
+            i += 1
+            if i % options.counter == 0:
+                sys.stdout.write("\rFound %s in %s records." % (j, i))
+                sys.stdout.flush()
+            call_no = elem.find('.//z30-call-no-key').text
+            if call_no >= begin and call_no <= end:
+                j += 1
+                outfile.write(ET.tostring(elem, encoding='utf8').strip())
+                outfile.write("\n")
+            elem.clear()
+    sys.stdout.write("\rFound %s in %s records.\n" % (j, i))
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+    main()
