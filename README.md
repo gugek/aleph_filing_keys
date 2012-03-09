@@ -2,6 +2,8 @@
 
 Create filing keys for Library of Congress Classification.
 
+Based in part on the filing keys for the ALEPH integrated library system.
+
 ## Examples
 
     >>> create_lcc_filing_key('KF1245.A45 J32 2011')
